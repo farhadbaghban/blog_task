@@ -10,7 +10,7 @@ import schema
 router = APIRouter()
 
 
-@router.post("/", response_model=schema.User)
+@router.post("/", response_model=schema.User, tags=["users"])
 def create_user(user: schema.UserCreate, db: Session = Depends(get_db)):
     db_user = User(**user.model_dump())
     db.add(db_user)
@@ -19,12 +19,12 @@ def create_user(user: schema.UserCreate, db: Session = Depends(get_db)):
     return JSONResponse(status_code=status.HTTP_201_CREATED, content=db_user)
 
 
-@router.get("/", response_model=List[schema.User])
+@router.get("/", response_model=List[schema.User], tags=["users"])
 def read_users(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
     return db.query(User).offset(skip).limit(limit).all()
 
 
-@router.get("/{user_id}", response_model=schema.User)
+@router.get("/{user_id}", response_model=schema.User, tags=["users"])
 def read_user(user_id: int, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
     if user is None:
@@ -32,7 +32,7 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
     return user
 
 
-@router.put("/{user_id}", response_model=schema.User)
+@router.put("/{user_id}", response_model=schema.User, tags=["users"])
 def update_user(user_id: int, user: schema.UserUpdate, db: Session = Depends(get_db)):
     db_user = db.query(User).filter(User.id == user_id).first()
     if db_user is None:
@@ -44,7 +44,7 @@ def update_user(user_id: int, user: schema.UserUpdate, db: Session = Depends(get
     return db_user
 
 
-@router.delete("/{user_id}", response_model=schema.User)
+@router.delete("/{user_id}", response_model=schema.User, tags=["users"])
 def delete_user(user_id: int, db: Session = Depends(get_db)):
     db_user = db.query(User).filter(User.id == user_id).first()
     if db_user is None:

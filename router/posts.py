@@ -13,7 +13,7 @@ import schema
 router = APIRouter()
 
 
-@router.post("/", response_model=schema.Post)
+@router.post("/", response_model=schema.Post, tags=["posts"])
 def create_post(post: schema.PostCreate, db: Session = Depends(get_db)):
     db_post = Post(**post.model_dump(), created_at=datetime.now())
     db.add(db_post)
@@ -22,7 +22,7 @@ def create_post(post: schema.PostCreate, db: Session = Depends(get_db)):
     return JSONResponse(status_code=status.HTTP_201_CREATED, content=db_post)
 
 
-@router.get("/", response_model=List[schema.Post])
+@router.get("/", response_model=List[schema.Post], tags=["posts"])
 def read_posts(
     author_id: int | None = None,
     start_date: datetime | None = None,
@@ -41,7 +41,7 @@ def read_posts(
     return query.offset(skip).limit(limit).all()
 
 
-@router.get("/{post_id}", response_model=schema.Post)
+@router.get("/{post_id}", response_model=schema.Post, tags=["posts"])
 def read_post(post_id: int, db: Session = Depends(get_db)):
     post = db.query(Post).filter(Post.id == post_id).first()
     if post is None:
@@ -49,7 +49,7 @@ def read_post(post_id: int, db: Session = Depends(get_db)):
     return post
 
 
-@router.put("/{post_id}", response_model=schema.Post)
+@router.put("/{post_id}", response_model=schema.Post, tags=["posts"])
 def update_post(post_id: int, post: schema.PostUpdate, db: Session = Depends(get_db)):
     db_post = db.query(Post).filter(Post.id == post_id).first()
     if db_post is None:
@@ -61,7 +61,7 @@ def update_post(post_id: int, post: schema.PostUpdate, db: Session = Depends(get
     return db_post
 
 
-@router.delete("/{post_id}", response_model=schema.Post)
+@router.delete("/{post_id}", response_model=schema.Post, tags=["posts"])
 def delete_post(post_id: int, db: Session = Depends(get_db)):
     db_post = db.query(Post).filter(Post.id == post_id).first()
     if db_post is None:
@@ -71,7 +71,7 @@ def delete_post(post_id: int, db: Session = Depends(get_db)):
     return db_post
 
 
-@router.post("/{post_id}/comments", response_model=schema.Comment)
+@router.post("/{post_id}/comments", response_model=schema.Comment, tags=["comments"])
 def create_comment(
     comment: schema.CommentCreateUpdate, post_id: int, db: Session = Depends(get_db)
 ):
@@ -84,7 +84,7 @@ def create_comment(
     return JSONResponse(status_code=status.HTTP_201_CREATED, content=db_comment)
 
 
-@router.get("/{post_id}/comments", response_model=List[schema.Post])
+@router.get("/{post_id}/comments", response_model=List[schema.Post], tags=["comments"])
 def read_comments(
     post_id: int,
     skip: int = 0,
@@ -96,7 +96,9 @@ def read_comments(
     )
 
 
-@router.delete("/{post_id}/comments/{comment_id}", response_model=schema.Comment)
+@router.delete(
+    "/{post_id}/comments/{comment_id}", response_model=schema.Comment, tags=["comments"]
+)
 def delete_comments(
     post_id: int,
     comment_id: int,
