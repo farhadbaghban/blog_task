@@ -1,7 +1,7 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException
-
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from db.engine import get_db
 from db.models.users import User
@@ -16,7 +16,7 @@ def create_user(user: schema.UserCreate, db: Session = Depends(get_db)):
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-    return db_user
+    return JSONResponse(status_code=status.HTTP_201_CREATED, content=db_user)
 
 
 @router.get("/", response_model=List[schema.User])

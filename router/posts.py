@@ -1,6 +1,7 @@
 from typing import List
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import JSONResponse
 
 from sqlalchemy.orm import Session
 from db.engine import get_db
@@ -18,7 +19,7 @@ def create_post(post: schema.PostCreate, db: Session = Depends(get_db)):
     db.add(db_post)
     db.commit()
     db.refresh(db_post)
-    return db_post
+    return JSONResponse(status_code=status.HTTP_201_CREATED, content=db_post)
 
 
 @router.get("/", response_model=List[schema.Post])
@@ -80,7 +81,7 @@ def create_comment(
     db.add(db_comment)
     db.commit()
     db.refresh(db_comment)
-    return db_comment
+    return JSONResponse(status_code=status.HTTP_201_CREATED, content=db_comment)
 
 
 @router.get("/{post_id}/comments", response_model=List[schema.Post])
