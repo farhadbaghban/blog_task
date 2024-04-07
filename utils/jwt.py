@@ -13,9 +13,7 @@ from _exceptions import ExpireToken, HeaderNotFound, ValidationToken
 
 
 class JWTHandler:
-    def __init__(self) -> None:
-        pass
-
+    @classmethod
     def generate_token(self, username: str) -> TokenResponseSchema:
         expire_access = datetime.now(timezone.utc) + timedelta(
             minutes=ACCESS_TOKEN_EXPIRE_MINUTES
@@ -26,13 +24,19 @@ class JWTHandler:
         )
         return TokenResponseSchema(access=encode_access)
 
+    @classmethod
     def verify_token(self, auth_token: Annotated[str, Header()]) -> TokenData:
         if not auth_token:
             raise HeaderNotFound
         try:
             token_data = jwt.decode(auth_token, JWT_SECRET_KEY, algorithms=[ALGORITHM])
 
-            if datetime.fromtimestamp(token_data["exp"]) < datetime.now(timezone.utc):
+            token_exp_timestamp = token_data["exp"]
+            token_exp_datetime = datetime.fromtimestamp(
+                token_exp_timestamp, timezone.utc
+            )
+            current_datetime_utc = datetime.now(timezone.utc)
+            if token_exp_datetime < current_datetime_utc:
                 raise ExpireToken
         except JWTError:
             raise ValidationToken
