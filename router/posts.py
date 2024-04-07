@@ -17,8 +17,13 @@ router = APIRouter()
 
 
 @router.post("/", response_model=PostSchema, tags=["posts"])
-def create_post(post: PostCreate, db: Session = Depends(get_db)):
-    db_post = Post(**post.model_dump(), created_at=datetime.now())
+def create_post(
+    post: PostCreate,
+    db: Session = Depends(get_db),
+    token_data: TokenData = Depends(JWTHandler.verify_token),
+):
+    user = get_user(username=token_data.username, db=db)
+    db_post = Post(**post.model_dump(), created_at=datetime.now(), author_id=user.id)
     db.add(db_post)
     db.commit()
     db.refresh(db_post)
@@ -93,10 +98,17 @@ def delete_post(
 
 @router.post("/{post_id}/comments", response_model=CommentSchema, tags=["comments"])
 def create_comment(
-    comment: CommentCreateUpdate, post_id: int, db: Session = Depends(get_db)
+    comment: CommentCreateUpdate,
+    post_id: int,
+    db: Session = Depends(get_db),
+    token_data: TokenData = Depends(JWTHandler.verify_token),
 ):
+    user = get_user(username=token_data.username, db=db)
     db_comment = Comment(
-        **comment.model_dump(), created_at=datetime.now(), post_id=post_id
+        **comment.model_dump(),
+        created_at=datetime.now(),
+        post_id=post_id,
+        author_id=user.id
     )
     db.add(db_comment)
     db.commit()

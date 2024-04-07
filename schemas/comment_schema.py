@@ -3,7 +3,6 @@ from datetime import datetime
 
 
 class CommentCreateUpdate(BaseModel):
-    author_id: int
     content: str
 
 
