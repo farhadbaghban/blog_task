@@ -1,7 +1,6 @@
 from typing import List
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends, HTTPException, Body
 
 from sqlalchemy.orm import Session
 from db.engine import get_db
@@ -9,6 +8,10 @@ from db.models.posts import Post
 from db.models.comments import Comment
 from schemas.post_schema import PostCreate, PostSchema, PostUpdate
 from schemas.comment_schema import CommentCreateUpdate, CommentSchema
+from schemas.auth_schema import TokenData
+from utils.jwt import JWTHandler
+from utils.security import get_user
+from _exceptions import IsNotYours, PostNotFound, CommentNotFound
 
 router = APIRouter()
 
@@ -19,7 +22,7 @@ def create_post(post: PostCreate, db: Session = Depends(get_db)):
     db.add(db_post)
     db.commit()
     db.refresh(db_post)
-    return JSONResponse(status_code=status.HTTP_201_CREATED, content=db_post)
+    return db_post
 
 
 @router.get("/", response_model=List[PostSchema], tags=["posts"])
@@ -50,25 +53,42 @@ def read_post(post_id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/{post_id}", response_model=PostSchema, tags=["posts"])
-def update_post(post_id: int, post: PostUpdate, db: Session = Depends(get_db)):
+def update_post(
+    post_id: int,
+    post: PostUpdate = Body(),
+    db: Session = Depends(get_db),
+    token_data: TokenData = Depends(JWTHandler.verify_token),
+):
     db_post = db.query(Post).filter(Post.id == post_id).first()
     if db_post is None:
-        raise HTTPException(status_code=404, detail="Post not found")
-    for var, value in vars(post).items():
-        setattr(db_post, var, value)
-    db.commit()
-    db.refresh(db_post)
-    return db_post
+        raise PostNotFound
+    user = get_user(username=token_data.username, db=db)
+    if user.id == db_post.author_id:
+        for var, value in vars(post).items():
+            setattr(db_post, var, value)
+        db.commit()
+        db.refresh(db_post)
+        return db_post
+    else:
+        raise IsNotYours
 
 
 @router.delete("/{post_id}", response_model=PostSchema, tags=["posts"])
-def delete_post(post_id: int, db: Session = Depends(get_db)):
+def delete_post(
+    post_id: int,
+    db: Session = Depends(get_db),
+    token_data: TokenData = Depends(JWTHandler.verify_token),
+):
     db_post = db.query(Post).filter(Post.id == post_id).first()
     if db_post is None:
-        raise HTTPException(status_code=404, detail="Post not found")
-    db.delete(db_post)
-    db.commit()
-    return db_post
+        raise PostNotFound
+    user = get_user(username=token_data.username, db=db)
+    if user.id == db_post.author_id:
+        db.delete(db_post)
+        db.commit()
+        return db_post
+    else:
+        raise IsNotYours
 
 
 @router.post("/{post_id}/comments", response_model=CommentSchema, tags=["comments"])
@@ -81,7 +101,7 @@ def create_comment(
     db.add(db_comment)
     db.commit()
     db.refresh(db_comment)
-    return JSONResponse(status_code=status.HTTP_201_CREATED, content=db_comment)
+    return db_comment
 
 
 @router.get("/{post_id}/comments", response_model=List[PostSchema], tags=["comments"])
@@ -102,22 +122,23 @@ def read_comments(
 def delete_comments(
     post_id: int,
     comment_id: int,
-    skip: int = 0,
-    limit: int = 10,
     db: Session = Depends(get_db),
+    token_data: TokenData = Depends(JWTHandler.verify_token),
 ):
 
     db_comment = (
         db.query(Comment)
-        .offset(skip)
-        .limit(limit)
         .filter(Comment.post_id == post_id)
         .filter(Comment.id == comment_id)
         .first()
     )
 
     if db_comment is None:
-        raise HTTPException(status_code=404, detail="Post not found")
-    db.delete(db_comment)
-    db.commit()
-    return db_comment
+        raise CommentNotFound
+    user = get_user(username=token_data.username, db=db)
+    if user.id == db_comment.author_id:
+        db.delete(db_comment)
+        db.commit()
+        return db_comment
+    else:
+        raise IsNotYours

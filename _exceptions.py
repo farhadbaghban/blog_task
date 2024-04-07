@@ -29,5 +29,23 @@ class UserAlreadyExists(HTTPException):
 
 class UserNotFound(HTTPException):
     def __init__(self) -> None:
-        self.status_code = 404
+        self.status_code = status.HTTP_404_NOT_FOUND
         self.detail = "user with this username and password not found!"
+
+
+class IsNotYours(HTTPException):
+    def __init__(self) -> None:
+        self.status_code = status.HTTP_403_FORBIDDEN
+        self.detail = "this post or comment is not your's"
+
+
+class PostNotFound(HTTPException):
+    def __init__(self) -> None:
+        self.status_code = status.HTTP_404_NOT_FOUND
+        self.detail = "post not found"
+
+
+class CommentNotFound(HTTPException):
+    def __init__(self) -> None:
+        self.status_code = status.HTTP_404_NOT_FOUND
+        self.detail = "post not found"
