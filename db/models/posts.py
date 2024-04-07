@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from db.engine import Base
+from .tags import post_tag_association
 
 
 class Post(Base):
@@ -15,3 +16,4 @@ class Post(Base):
     author = relationship("User", back_populates="posts")
 
     comments = relationship("Comment", back_populates="post")
+    tags = relationship("Tag", secondary=post_tag_association, back_populates="posts")
