@@ -1,11 +1,11 @@
 from pydantic import BaseModel
-from typing import Optional
+from datetime import timedelta
 
 
-class TokenSchema(BaseModel):
-    access_token: str
-    refresh_token: str
+class TokenData(BaseModel):
+    username: str | None = None
+    exp: timedelta | None = None
 
 
-class TokenPayload(BaseModel):
-    id: Optional[str] = None
+class TokenResponseSchema(BaseModel):
+    access: str | None = None

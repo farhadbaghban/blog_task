@@ -1,11 +1,13 @@
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from db.engine import get_db
 from db.models.users import User
-from schemas.user_schema import UserAuth, UserCreate, UserUpdate
-from utils import get_hashed_password
+from schemas.user_schema import UserAuth, UserUpdate, UserCreate
+from _exceptions import UserAlreadyExists
+from utils.security import get_hashed_password
 
 
 router = APIRouter()
@@ -13,14 +15,16 @@ router = APIRouter()
 
 @router.post("/", response_model=UserAuth, tags=["users"], summary="Create new user")
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
-    db_user = {
-        "username": user.username,
-        "password": get_hashed_password(user.password),
-    }
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return JSONResponse(status_code=status.HTTP_201_CREATED, content=db_user)
+    print("start--------------")
+    password = get_hashed_password(user.password)
+    db_user = {"username": user.username, "password": password}
+    with db:
+        try:
+            db.add(user)
+            db.commit()
+            return JSONResponse(status_code=status.HTTP_201_CREATED, content=db_user)
+        except IntegrityError:
+            raise UserAlreadyExists
 
 
 @router.get("/", response_model=List[UserAuth], tags=["users"])

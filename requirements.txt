@@ -1,0 +1,16 @@
+annotated-types==0.6.0
+bcrypt==4.1.2
+cryptography==41.0.7
+fastapi==0.110.1
+psycopg==3.1.13
+psycopg2==2.9.9
+pydantic==2.6.0
+pydantic_core==2.16.1
+python-decouple==3.8
+python-jose==3.3.0
+pytz==2023.3.post1
+SQLAlchemy==2.0.29
+types-passlib==1.7.7.20240327
+types-python-jose==3.3.4
+urllib3==2.1.0
+uvicorn==0.29.0
