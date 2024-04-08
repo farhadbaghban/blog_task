@@ -3,7 +3,7 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import declarative_base, sessionmaker
 import time
 
-# SQLALCHEMY_DATABASE_URL = "mysql+pymysql://user:password@mysql:3306/blog_db"
+# SQLALCHEMY_DATABASE_URL = "sqlite:///./blog.db"
 SQLALCHEMY_DATABASE_URL = "mysql+pymysql://user:password@mysql:3306/blog_db"
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
