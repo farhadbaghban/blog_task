@@ -1,6 +1,5 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-
 from db.models.users import User
 from utils.security import get_hashed_password, authenticate_user
 from schemas.user_schema import UserCreateLogin, UserAuth
